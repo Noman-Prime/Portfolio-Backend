@@ -4,16 +4,14 @@ import jwt from "jsonwebtoken";
 const storage = multer.memoryStorage();
 export const upload = multer({ storage });
 
-// authMiddleware can optionally skip public routes
 export default function authMiddleware(req, res, next) {
-  // Define public routes here
   const publicRoutes = [
     "/api/v1/project/all-projects",
-    // add more public routes if needed
   ];
 
-  if (publicRoutes.includes(req.originalUrl)) {
-    return next(); // skip auth for public route
+  // Skip auth if request starts with a public route
+  if (publicRoutes.some(route => req.originalUrl.startsWith(route))) {
+    return next();
   }
 
   const authHeader = req.headers.authorization;
@@ -25,7 +23,7 @@ export default function authMiddleware(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.admin = decoded; // attach decoded token to request
+    req.admin = decoded; 
     next();
   } catch (err) {
     return res.status(401).json({ success: false, message: "Invalid token" });
